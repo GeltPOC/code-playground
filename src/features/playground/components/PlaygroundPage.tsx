@@ -42,7 +42,9 @@ export function PlaygroundPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           source_code: code,
-          language_id: selectedLanguage.judgeId
+          language: selectedLanguage.pistonLanguage,
+          version: selectedLanguage.pistonVersion,
+          fileName: selectedLanguage.fileName
         })
       })
 

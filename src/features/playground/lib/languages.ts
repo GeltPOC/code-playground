@@ -2,7 +2,10 @@ export type Language = {
   id: string
   name: string
   icon: string
-  judgeId: number
+  /** Nombre del runtime en Piston API (https://emkc.org/api/v2/piston/runtimes) */
+  pistonLanguage: string
+  /** Versión del runtime. '*' = última disponible */
+  pistonVersion: string
   fileName: string
   defaultCode: string
 }
@@ -12,31 +15,33 @@ export const LANGUAGES: Language[] = [
     id: 'php',
     name: 'PHP',
     icon: '🐘',
-    judgeId: 68,
+    pistonLanguage: 'php',
+    pistonVersion: '*',
     fileName: 'main.php',
     defaultCode: `<?php
 
 $message = "Hello, World!";
-echo $message . "\n";
+echo $message . "\\n";
 
 // Ejemplo con arrays y bucles
 $numbers = [1, 2, 3, 4, 5];
 $sum = array_sum($numbers);
-echo "La suma de los números es: $sum\n";
+echo "La suma de los números es: $sum\\n";
 
 // Función simple
 function greet(string $name): string {
     return "Hola, $name!";
 }
 
-echo greet("Code Playground") . "\n";
+echo greet("Code Playground") . "\\n";
 `
   },
   {
     id: 'javascript',
     name: 'JavaScript',
     icon: '🟨',
-    judgeId: 63,
+    pistonLanguage: 'javascript',
+    pistonVersion: '*',
     fileName: 'main.js',
     defaultCode: `// Hello, World!
 console.log('Hello, World!');
@@ -57,7 +62,8 @@ console.log(greet('Code Playground'));
     id: 'python',
     name: 'Python',
     icon: '🐍',
-    judgeId: 71,
+    pistonLanguage: 'python',
+    pistonVersion: '*',
     fileName: 'main.py',
     defaultCode: `# Hello, World!
 print('Hello, World!')
@@ -77,7 +83,8 @@ print(greet('Code Playground'))
     id: 'java',
     name: 'Java',
     icon: '☕',
-    judgeId: 62,
+    pistonLanguage: 'java',
+    pistonVersion: '*',
     fileName: 'Main.java',
     defaultCode: `public class Main {
     public static void main(String[] args) {
@@ -101,7 +108,8 @@ print(greet('Code Playground'))
     id: 'cpp',
     name: 'C++',
     icon: '⚙️',
-    judgeId: 54,
+    pistonLanguage: 'c++',
+    pistonVersion: '*',
     fileName: 'main.cpp',
     defaultCode: `#include <iostream>
 #include <vector>
@@ -129,7 +137,8 @@ int main() {
     id: 'rust',
     name: 'Rust',
     icon: '🦀',
-    judgeId: 73,
+    pistonLanguage: 'rust',
+    pistonVersion: '*',
     fileName: 'main.rs',
     defaultCode: `fn greet(name: &str) -> String {
     format!("Hola, {}!", name)
@@ -144,6 +153,81 @@ fn main() {
 
     println!("{}", greet("Code Playground"));
 }
+`
+  },
+  {
+    id: 'typescript',
+    name: 'TypeScript',
+    icon: '🔷',
+    pistonLanguage: 'typescript',
+    pistonVersion: '*',
+    fileName: 'main.ts',
+    defaultCode: `// Hello, World!
+console.log('Hello, World!');
+
+const numbers: number[] = [1, 2, 3, 4, 5];
+const sum: number = numbers.reduce((a, b) => a + b, 0);
+console.log('La suma es:', sum);
+
+function greet(name: string): string {
+  return \`Hola, \${name}!\`;
+}
+
+console.log(greet('Code Playground'));
+`
+  },
+  {
+    id: 'go',
+    name: 'Go',
+    icon: '🐹',
+    pistonLanguage: 'go',
+    pistonVersion: '*',
+    fileName: 'main.go',
+    defaultCode: `package main
+
+import "fmt"
+
+func greet(name string) string {
+	return "Hola, " + name + "!"
+}
+
+func main() {
+	fmt.Println("Hello, World!")
+
+	numbers := []int{1, 2, 3, 4, 5}
+	sum := 0
+	for _, n := range numbers {
+		sum += n
+	}
+	fmt.Println("La suma es:", sum)
+
+	fmt.Println(greet("Code Playground"))
+}
+`
+  },
+  {
+    id: 'bash',
+    name: 'Bash',
+    icon: '🖥️',
+    pistonLanguage: 'bash',
+    pistonVersion: '*',
+    fileName: 'main.sh',
+    defaultCode: `#!/bin/bash
+
+echo "Hello, World!"
+
+numbers=(1 2 3 4 5)
+sum=0
+for n in "\${numbers[@]}"; do
+  sum=$((sum + n))
+done
+echo "La suma es: $sum"
+
+greet() {
+  echo "Hola, $1!"
+}
+
+greet "Code Playground"
 `
   }
 ]

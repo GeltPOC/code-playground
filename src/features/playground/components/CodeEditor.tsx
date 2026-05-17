@@ -20,14 +20,16 @@ type Props = {
 
 function getExtension(langId: string): Extension[] {
   switch (langId) {
-    case 'php': return [php()]
+    case 'php':        return [php()]
     case 'javascript': return [javascript()]
     case 'typescript': return [javascript({ typescript: true })]
-    case 'python': return [python()]
-    case 'java': return [java()]
-    case 'cpp': return [cpp()]
-    case 'rust': return [rust()]
-    default: return []
+    case 'python':     return [python()]
+    case 'java':       return [java()]
+    case 'cpp':        return [cpp()]
+    case 'rust':       return [rust()]
+    case 'go':         return [cpp()]   // closest available for Go highlighting
+    case 'bash':       return []
+    default:           return []
   }
 }
 

@@ -1,89 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const JUDGE0_URL = 'https://judge0-ce.p.rapidapi.com'
-const API_KEY = process.env.JUDGE0_API_KEY ?? ''
-
-async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
+// Piston API — 100% gratuita, sin API key, sin límite de uso razonable
+// Docs: https://github.com/engineer-man/piston
+const PISTON_URL = 'https://emkc.org/api/v2/piston/execute'
 
 export async function POST(req: NextRequest) {
   try {
-    const { source_code, language_id, stdin } = await req.json()
+    const { source_code, language, version, stdin, fileName } = await req.json()
 
-    if (!source_code || !language_id) {
+    if (!source_code || !language) {
       return NextResponse.json({ error: 'Faltan parámetros requeridos' }, { status: 400 })
     }
 
-    if (!API_KEY) {
-      return NextResponse.json({ error: 'API key de Judge0 no configurada. Añade JUDGE0_API_KEY a tu .env.local' }, { status: 500 })
-    }
-
-    // Enviar submission
-    const submitRes = await fetch(`${JUDGE0_URL}/submissions?base64_encoded=false&wait=false`, {
+    const pistonRes = await fetch(PISTON_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-RapidAPI-Key': API_KEY,
-        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        source_code,
-        language_id,
-        stdin: stdin ?? ''
+        language,
+        version: version ?? '*',
+        files: [
+          {
+            name: fileName ?? 'main',
+            content: source_code
+          }
+        ],
+        stdin: stdin ?? '',
+        args: [],
+        compile_timeout: 10000,
+        run_timeout: 5000
       })
     })
 
-    if (!submitRes.ok) {
-      const errText = await submitRes.text()
-      return NextResponse.json({ error: `Error al enviar a Judge0: ${errText}` }, { status: 502 })
-    }
-
-    const { token } = await submitRes.json()
-
-    // Polling para obtener resultado
-    let attempts = 0
-    const maxAttempts = 10
-
-    while (attempts < maxAttempts) {
-      await sleep(1000)
-      attempts++
-
-      const resultRes = await fetch(
-        `${JUDGE0_URL}/submissions/${token}?base64_encoded=false&fields=stdout,stderr,status,compile_output,time,memory`,
-        {
-          headers: {
-            'X-RapidAPI-Key': API_KEY,
-            'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-          }
-        }
+    if (!pistonRes.ok) {
+      const errText = await pistonRes.text()
+      return NextResponse.json(
+        { error: `Error en Piston API: ${errText}` },
+        { status: 502 }
       )
-
-      if (!resultRes.ok) {
-        const errText = await resultRes.text()
-        return NextResponse.json({ error: `Error al obtener resultado: ${errText}` }, { status: 502 })
-      }
-
-      const result = await resultRes.json()
-      const statusId = result?.status?.id
-
-      // Status 1 = In Queue, 2 = Processing
-      if (statusId === 1 || statusId === 2) {
-        continue
-      }
-
-      return NextResponse.json({
-        stdout: result.stdout ?? '',
-        stderr: result.stderr ?? '',
-        compile_output: result.compile_output ?? '',
-        status: result.status?.description ?? 'Unknown',
-        status_id: statusId,
-        time: result.time,
-        memory: result.memory
-      })
     }
 
-    return NextResponse.json({ error: 'Timeout: el código tardó demasiado en ejecutarse' }, { status: 408 })
+    const data = await pistonRes.json()
+
+    // Piston devuelve { run: { stdout, stderr, code, signal, output }, compile?: { ... } }
+    const run = data.run ?? {}
+    const compile = data.compile ?? null
+
+    const stdout = run.stdout ?? ''
+    const stderr = run.stderr ?? ''
+    const compileOutput = compile ? (compile.stderr ?? compile.stdout ?? '') : ''
+    const exitCode = run.code ?? 0
+    const success = exitCode === 0 && !compile?.code
+
+    return NextResponse.json({
+      stdout,
+      stderr,
+      compile_output: compileOutput,
+      status: success ? 'Accepted' : 'Error',
+      status_id: success ? 3 : 6,
+      time: null,
+      memory: null
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error desconocido'
     return NextResponse.json({ error: message }, { status: 500 })
